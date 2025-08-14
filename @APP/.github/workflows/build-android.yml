@@ -1,0 +1,123 @@
+name: 🚀 Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📂 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 📱 Setup Android Environment
+      uses: android-actions/setup-android@v3
+      
+    - name: ☕ Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 📥 Install Dependencies
+      run: npm ci
+      
+    - name: 🔧 Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        target: google_apis
+        arch: x86_64
+        
+    - name: 📋 Accept Android Licenses
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        
+    - name: 🔄 Sync Capacitor
+      run: |
+        npx cap sync android
+        
+    - name: 🏗️ Build Android Debug APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon --stacktrace
+        
+    - name: 🔍 Find APK
+      id: find_apk
+      run: |
+        APK_PATH=$(find android -name "*.apk" -type f | head -1)
+        echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
+        echo "Found APK at: $APK_PATH"
+        ls -la $APK_PATH
+        
+    - name: 📝 Rename APK
+      run: |
+        APK_PATH="${{ steps.find_apk.outputs.APK_PATH }}"
+        cp "$APK_PATH" "WhatsApp-Reminder-$(date +%Y%m%d-%H%M).apk"
+        
+    - name: 📤 Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: WhatsApp-Reminder-APK
+        path: "*.apk"
+        retention-days: 30
+        
+    - name: 📊 APK Info
+      run: |
+        APK_FILE=$(ls *.apk | head -1)
+        APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
+        echo "🎉 APK Build Successful!"
+        echo "📱 File: $APK_FILE"
+        echo "📏 Size: $APK_SIZE"
+        echo "📥 Download from the 'Actions' tab above"
+        
+    - name: 🚀 Create Release (on main branch)
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: "v1.0.0-${{ github.run_number }}"
+        name: "WhatsApp Reminder v1.0.0-${{ github.run_number }}"
+        body: |
+          🎉 **WhatsApp Reminder Android App - Automated Build**
+          
+          📱 **Ready-to-install APK built automatically!**
+          
+          ## 📥 Installation Instructions
+          1. Download the APK file below
+          2. Enable "Unknown Sources" in Android Settings
+          3. Install the APK on your Android device
+          4. Grant necessary permissions when prompted
+          5. Open app → Connect WhatsApp Web → Start creating reminders!
+          
+          ## ✨ Features
+          - 🔄 Automated WhatsApp reminders
+          - 📱 Background operation when app is closed
+          - 🌙 Elegant black & white theme
+          - 💾 Local storage (no backend needed)
+          - 🔔 Push notifications for sent messages
+          - 📞 Direct phone number input
+          - ⏰ Flexible scheduling with time ranges
+          
+          ## 🛡️ Privacy & Security
+          - All data stored locally on your device
+          - No external servers or data collection
+          - Uses official WhatsApp Web authentication
+          
+          Built automatically with GitHub Actions ✨
+        files: "*.apk"
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

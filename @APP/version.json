@@ -1,0 +1,28 @@
+{
+  "app": {
+    "name": "WhatsApp Reminder",
+    "version": "1.0.0",
+    "build": "auto-generated",
+    "platform": "android",
+    "capacitor": "5.7.0"
+  },
+  "features": [
+    "Automated WhatsApp messaging",
+    "Background operation",
+    "Local data storage",
+    "Push notifications", 
+    "Black & white theme",
+    "Direct phone input",
+    "Flexible scheduling",
+    "Time range controls"
+  ],
+  "build": {
+    "method": "GitHub Actions",
+    "auto_build": true,
+    "output": "APK",
+    "target": "Android 5.1+",
+    "size_estimate": "~8-15 MB"
+  },
+  "created": "2025-08-14",
+  "repository": "https://github.com/YOUR_USERNAME/whatsapp-reminder"
+}
