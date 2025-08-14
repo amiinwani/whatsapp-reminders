@@ -1,0 +1,23 @@
+{
+  "name": "whatsapp-reminder-backend",
+  "version": "1.0.0",
+  "description": "WhatsApp auto-messaging reminder tool backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode": "^1.5.3",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["whatsapp", "automation", "reminder"],
+  "author": "",
+  "license": "MIT"
+}

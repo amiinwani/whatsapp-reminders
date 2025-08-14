@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Reminder Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            padding: 20px;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(255,255,255,0.1);
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .header {
+            background: #000000;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 2px solid #333;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .status-card {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 5px solid #ffffff;
+            border: 1px solid #444;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.connected {
+            background: #ffffff;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #666;
+            border-radius: 10px;
+            margin: 20px 0;
+            background: #222;
+        }
+
+        .qr-code {
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #444;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .time-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #ffffff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #555;
+            color: #999;
+            border-color: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: #000000;
+            color: #ffffff;
+            border-color: #666;
+        }
+
+        .btn-danger:hover {
+            background: #333;
+            border-color: #ffffff;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #ffffff;
+            border-color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+            border-color: #ffffff;
+        }
+
+        .active-reminder {
+            background: #2a2a2a;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .reminder-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #2a2a2a;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+        }
+
+        .alert-error {
+            background: #2a2a2a;
+            border: 1px solid #666;
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .time-range {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 WhatsApp Reminder</h1>
+            <p>Automated messaging made simple</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Status Section -->
+            <div class="status-card">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <strong id="statusText">Connecting...</strong>
+                </div>
+                <div id="contactsCount">Contacts: Loading...</div>
+                
+                <!-- QR Code Section -->
+                <div id="qrSection" class="qr-section hidden">
+                    <h3>Scan QR Code with WhatsApp</h3>
+                    <p>Open WhatsApp on your phone → Settings → Linked Devices → Link a Device</p>
+                    <div class="qr-code">
+                        <img id="qrImage" src="" alt="QR Code" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Section -->
+            <div id="alertSection"></div>
+
+            <!-- Active Reminder Display -->
+            <div id="activeReminderSection" class="hidden">
+                <div class="active-reminder">
+                    <h3>🔄 Active Reminder</h3>
+                    <div id="reminderDetails"></div>
+                    <div class="reminder-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="messageCount">0</div>
+                            <div class="stat-label">Messages Sent</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="timeRunning">0m</div>
+                            <div class="stat-label">Running Time</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="lastSent">Never</div>
+                            <div class="stat-label">Last Sent</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-secondary" onclick="testReminder()">Send Test Message</button>
+                        <button class="btn btn-danger" onclick="stopReminder()">Stop Reminder</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminder Setup Form -->
+            <div id="reminderForm" class="form-section">
+                <h3>📝 Setup New Reminder</h3>
+                
+                <div class="form-group">
+                    <label for="contactSelect">Select Contact:</label>
+                    <select id="contactSelect">
+                        <option value="">Choose a contact...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="messageText">Message to Send:</label>
+                    <textarea id="messageText" placeholder="Enter your reminder message..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="frequency">Send Every (minutes):</label>
+                    <input type="number" id="frequency" min="1" max="1440" value="60" placeholder="60">
+                </div>
+
+                <div class="form-group">
+                    <label>Time Range (Optional - leave empty for 24/7):</label>
+                    <div class="time-range">
+                        <div>
+                            <label for="startTime">Start Time:</label>
+                            <input type="time" id="startTime">
+                        </div>
+                        <div>
+                            <label for="endTime">End Time:</label>
+                            <input type="time" id="endTime">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="startReminder()" id="startButton" disabled>
+                    Start Reminder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let statusInterval;
+        let activeReminder = null;
+
+        // Initialize app
+        let contactsLoaded = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            statusInterval = setInterval(updateStatus, 2000);
+        });
+
+        // Update status and UI
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const status = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const contactsCount = document.getElementById('contactsCount');
+                const qrSection = document.getElementById('qrSection');
+                const startButton = document.getElementById('startButton');
+                
+                if (status.clientReady) {
+                    statusDot.classList.add('connected');
+                    statusText.textContent = 'Connected to WhatsApp';
+                    contactsCount.textContent = `Contacts: ${status.contactsCount}`;
+                    qrSection.classList.add('hidden');
+                    startButton.disabled = false;
+                    
+                    if (status.contactsCount > 0 && !contactsLoaded) {
+                        loadContacts();
+                        contactsLoaded = true;
+                    }
+                } else {
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Connecting to WhatsApp...';
+                    contactsCount.textContent = 'Contacts: Loading...';
+                    startButton.disabled = true;
+                    contactsLoaded = false;
+                    
+                    if (status.qrCode) {
+                        document.getElementById('qrImage').src = status.qrCode;
+                        qrSection.classList.remove('hidden');
+                    } else {
+                        qrSection.classList.add('hidden');
+                    }
+                }
+                
+                // Update active reminder
+                if (status.activeReminder) {
+                    activeReminder = status.activeReminder;
+                    showActiveReminder(status.activeReminder);
+                } else {
+                    hideActiveReminder();
+                }
+                
+            } catch (error) {
+                console.error('Error updating status:', error);
+                document.getElementById('statusText').textContent = 'Connection Error';
+            }
+        }
+
+        // Load contacts
+        async function loadContacts() {
+            try {
+                const response = await fetch('/api/contacts');
+                const contacts = await response.json();
+                
+                const select = document.getElementById('contactSelect');
+                const currentValue = select.value; // Preserve current selection
+                select.innerHTML = '<option value="">Choose a contact...</option>';
+                
+                contacts.forEach(contact => {
+                    const option = document.createElement('option');
+                    option.value = contact.id;
+                    option.textContent = contact.name;
+                    if (contact.id === currentValue) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                showAlert('Error loading contacts', 'error');
+            }
+        }
+
+        // Start reminder
+        async function startReminder() {
+            const contactSelect = document.getElementById('contactSelect');
+            const messageText = document.getElementById('messageText');
+            const frequency = document.getElementById('frequency');
+            const startTime = document.getElementById('startTime');
+            const endTime = document.getElementById('endTime');
+            
+            if (!contactSelect.value || !messageText.value || !frequency.value) {
+                showAlert('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const contactName = contactSelect.options[contactSelect.selectedIndex].text;
+            
+            const reminderData = {
+                contactId: contactSelect.value,
+                contactName: contactName,
+                message: messageText.value,
+                frequency: parseInt(frequency.value),
+                startTime: startTime.value || null,
+                endTime: endTime.value || null
+            };
+            
+            try {
+                const response = await fetch('/api/reminder/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reminderData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Reminder started successfully!', 'success');
+                    clearForm();
+                } else {
+                    showAlert('Failed to start reminder', 'error');
+                }
+            } catch (error) {
+                console.error('Error starting reminder:', error);
+                showAlert('Error starting reminder', 'error');
+            }
+        }
+
+        // Stop reminder
+        async function stopReminder() {
+            try {
+                const response = await fetch('/api/reminder/stop', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Reminder stopped', 'success');
+                }
+            } catch (error) {
+                console.error('Error stopping reminder:', error);
+                showAlert('Error stopping reminder', 'error');
+            }
+        }
+
+        // Test reminder
+        async function testReminder() {
+            try {
+                const response = await fetch('/api/reminder/test', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Test message sent!', 'success');
+                } else {
+                    showAlert('Failed to send test message', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending test:', error);
+                showAlert('Error sending test message', 'error');
+            }
+        }
+
+        // Show active reminder
+        function showActiveReminder(reminder) {
+            document.getElementById('activeReminderSection').classList.remove('hidden');
+            document.getElementById('reminderForm').classList.add('hidden');
+            
+            const details = document.getElementById('reminderDetails');
+            const timeRange = reminder.startTime && reminder.endTime 
+                ? ` (${reminder.startTime} - ${reminder.endTime})`
+                : '';
+            
+            details.innerHTML = `
+                <strong>Contact:</strong> ${reminder.contactName}<br>
+                <strong>Message:</strong> "${reminder.message}"<br>
+                <strong>Frequency:</strong> Every ${reminder.frequency} minutes${timeRange}
+            `;
+            
+            document.getElementById('messageCount').textContent = reminder.messageCount || 0;
+            
+            // Calculate running time
+            if (reminder.started) {
+                const started = new Date(reminder.started);
+                const now = new Date();
+                const diffMinutes = Math.floor((now - started) / (1000 * 60));
+                document.getElementById('timeRunning').textContent = diffMinutes < 60 
+                    ? `${diffMinutes}m` 
+                    : `${Math.floor(diffMinutes/60)}h ${diffMinutes%60}m`;
+            }
+            
+            // Last sent
+            if (reminder.lastSent) {
+                const lastSent = new Date(reminder.lastSent);
+                document.getElementById('lastSent').textContent = 
+                    lastSent.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else {
+                document.getElementById('lastSent').textContent = 'Never';
+            }
+        }
+
+        // Hide active reminder
+        function hideActiveReminder() {
+            document.getElementById('activeReminderSection').classList.add('hidden');
+            document.getElementById('reminderForm').classList.remove('hidden');
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('contactSelect').value = '';
+            document.getElementById('messageText').value = '';
+            document.getElementById('frequency').value = '60';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alertSection = document.getElementById('alertSection');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            
+            alertSection.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertSection.innerHTML = '';
+            }, 5000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+        });
+    </script>
+</body>
+</html>
